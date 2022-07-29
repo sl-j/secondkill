@@ -5,6 +5,9 @@ import com.lei.secondkill.entity.TUser;
 import com.lei.secondkill.vo.LoginVo;
 import com.lei.secondkill.vo.ResponseResult;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 
 /**
  * (TUser)表服务接口
@@ -14,5 +17,9 @@ import com.lei.secondkill.vo.ResponseResult;
  */
 public interface TUserService extends IService<TUser> {
 
-    ResponseResult doLogin(LoginVo loginVo);
+    ResponseResult doLogin(LoginVo loginVo, HttpServletRequest request, HttpServletResponse response);
+
+
+    //根据cookie获取用户
+    TUser getUserByCookies(String userTicket, HttpServletRequest request, HttpServletResponse response);
 }
