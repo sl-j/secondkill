@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.lei.secondkill.entity.TUser;
 import com.lei.secondkill.vo.LoginVo;
 import com.lei.secondkill.vo.ResponseResult;
+import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author makejava
  * @since 2022-07-28 14:43:13
  */
+
 public interface TUserService extends IService<TUser> {
 
     ResponseResult doLogin(LoginVo loginVo, HttpServletRequest request, HttpServletResponse response);
