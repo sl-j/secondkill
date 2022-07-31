@@ -48,17 +48,25 @@ public class GoodsController {
         GoodsVo goodsVo = goodsService.toDetail(goodsId);
         Date startDate = goodsVo.getStartDate();
         Date endDate = goodsVo.getEndDate();
-        Date noeDate = new Date();
+        Date nowDate = new Date();
 
+        //秒杀状态
         int secKillStatus = 0;
-        if(noeDate.before(startDate)){
 
-        }else if(noeDate.after(endDate)){
+        //秒杀倒计时
+        int remainSeconds = 0;
+        if(nowDate.before(startDate)){
+            remainSeconds = ((int)((startDate .getTime() - nowDate.getTime())) / 1000);
+            secKillStatus = 0;
+        }else if(nowDate.after(endDate)){
             secKillStatus = 2;
+            remainSeconds = -1;
         }else{
             secKillStatus = 1;
+            remainSeconds = 0;
         }
 
+        model.addAttribute("remainSeconds",remainSeconds);
         model.addAttribute("goods",goodsVo);
         model.addAttribute("secKillStatus",secKillStatus);
         return "goodsDetail";

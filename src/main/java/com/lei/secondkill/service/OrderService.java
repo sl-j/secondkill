@@ -2,6 +2,8 @@ package com.lei.secondkill.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.lei.secondkill.entity.Order;
+import com.lei.secondkill.entity.TUser;
+import com.lei.secondkill.vo.GoodsVo;
 import org.springframework.stereotype.Service;
 
 
@@ -14,4 +16,5 @@ import org.springframework.stereotype.Service;
 
 public interface OrderService extends IService<Order> {
 
+    Order seckill(TUser user, GoodsVo goodsVo);
 }
