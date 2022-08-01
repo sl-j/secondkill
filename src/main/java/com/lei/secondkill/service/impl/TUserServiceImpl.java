@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.concurrent.TimeUnit;
 
 /**
  * (TUser)表服务实现类
@@ -60,7 +61,7 @@ public class TUserServiceImpl extends ServiceImpl<TUserMapper, TUser> implements
         //生成cookie
         String uuid = UUIDUtil.uuid();
 //        redisCache.setCacheObject("1",1);
-        redisTemplate.opsForValue().set("user:" + uuid, JsonUtil.object2JsonStr(user));
+        redisTemplate.opsForValue().set("user:" + uuid, JsonUtil.object2JsonStr(user),1, TimeUnit.DAYS);
 //        request.getSession().setAttribute(uuid,user);
         CookieUtil.setCookie(request,response,"userTicket",uuid);
         return ResponseResult.okResult(uuid);

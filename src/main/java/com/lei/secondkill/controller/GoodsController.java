@@ -6,18 +6,23 @@ import com.lei.secondkill.service.GoodsService;
 import com.lei.secondkill.service.TUserService;
 import com.lei.secondkill.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 @RequestMapping("/goods")
@@ -27,14 +32,32 @@ public class GoodsController {
     private TUserService tUserService;
     @Autowired
     private GoodsService goodsService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
+    private ThymeleafViewResolver thymeleafViewResolver;
 
-    @RequestMapping("/toList")
-    public String toList(Model model,TUser user){
-
+    @RequestMapping(value = "/toList",produces = "text/html;charset=utf-8")
+    @ResponseBody
+    public String toList(Model model,TUser user,
+                         HttpServletRequest request,HttpServletResponse response){
+        //redis中获取
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        String html = (String)valueOperations.get("goodsList");
+        if(!StringUtils.isEmpty(html)){
+            return html;
+        }
         model.addAttribute("user",user);
         List<GoodsVo> goodVo = goodsService.findGoodsVo();
         model.addAttribute("goodsList",goodVo);
-        return "goodsList";
+        //手动渲染，
+        WebContext webContext = new WebContext(request,response,request.getServletContext(),request.getLocale(), model.asMap());
+        html = thymeleafViewResolver.getTemplateEngine().process("goodsList",webContext);
+        if(!StringUtils.isEmpty(html)){
+            valueOperations.set("goodsList",html,1, TimeUnit.MINUTES);
+            return html;
+        }
+        return html;
     }
 
     /**
@@ -44,6 +67,12 @@ public class GoodsController {
      */
     @RequestMapping("/toDetail/{goodsId}")
     public String toDetail(Model model,TUser user,@PathVariable Long goodsId){
+        //redis中获取
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        String html = (String)valueOperations.get("goodsDetails:" + goodsId);
+        if(!StringUtils.isEmpty(html)){
+            return html;
+        }
         model.addAttribute("user",user);
         GoodsVo goodsVo = goodsService.toDetail(goodsId);
         Date startDate = goodsVo.getStartDate();

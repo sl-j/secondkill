@@ -11,6 +11,7 @@ import com.lei.secondkill.service.SeckillOrderService;
 import com.lei.secondkill.vo.AppHttpCodeEnum;
 import com.lei.secondkill.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,9 @@ public class SecKillController {
     @Autowired
     private SeckillOrderService seckillOrderService;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
     @RequestMapping("/doSeckill")
     public String doSeckill(Model model, TUser user,Long goodsId){
         if(user == null) return "login";
@@ -41,9 +45,11 @@ public class SecKillController {
         }
 
         //判断是否重复抢购
-        LambdaQueryWrapper<SeckillOrder> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SeckillOrder::getUserId,user.getId()).eq(SeckillOrder::getGoodsId,goodsId);
-        SeckillOrder seckillOrder = seckillOrderService.getOne(queryWrapper);
+//        LambdaQueryWrapper<SeckillOrder> queryWrapper = new LambdaQueryWrapper<>();
+//        queryWrapper.eq(SeckillOrder::getUserId,user.getId()).eq(SeckillOrder::getGoodsId,goodsId);
+//        SeckillOrder seckillOrder = seckillOrderService.getOne(queryWrapper);
+        //从redis中拿出订单信息，判断是否重复抢购
+        SeckillOrder seckillOrder = (SeckillOrder) redisTemplate.opsForValue().get("order:" + user.getId() + ":" + goodsVo.getId());
 
         if(seckillOrder != null){
             model.addAttribute("errmsg", AppHttpCodeEnum.REPEAT_ERROR);
