@@ -15,8 +15,8 @@ public class MQSender {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    public void send(Object msg){
+    public void send(String msg){
         log.info("发送消息:" + msg);
-        rabbitTemplate.convertAndSend("queue",msg);
+        rabbitTemplate.convertAndSend("seckillExchange","seckill.msg",msg);
     }
 }

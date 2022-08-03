@@ -15,6 +15,7 @@ import com.lei.secondkill.service.SeckillOrderService;
 import com.lei.secondkill.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,7 +52,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         seckillGoods.setStockCount(seckillGoods.getStockCount() - 1);
         boolean secKillResult = seckillGoodsService.update(new UpdateWrapper<SeckillGoods>().setSql("stock_count = stock_count - 1").eq("goods_id", seckillGoods.getId()).gt("stock_count", 0));
 
-        if(!secKillResult){
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        //判断是否还有库存
+        if(seckillGoods.getStockCount() < 1){
+            valueOperations.set("isStockEmpty:" + goodsVo.getId(),0);
             return null;
         }
         //生成订单
@@ -75,7 +79,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         seckillOrderService.save(seckillOrder);
 
         //将秒杀订单存入redis中
-        redisTemplate.opsForValue().set("order:"+user.getId()+":"+goodsVo.getId(),seckillOrder);
+        valueOperations.set("order:"+user.getId()+":"+goodsVo.getId(),seckillOrder);
 
 
         return order;
