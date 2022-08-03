@@ -19,6 +19,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
@@ -50,6 +51,9 @@ public class SecKillController implements InitializingBean {
     @Autowired
     private MQSender mqSender;
 
+    @Autowired
+    private DefaultRedisScript<Long> redisScript;
+
     private Map<Long,Boolean> EmptyStockMap = new HashMap<>();
 
     @RequestMapping("/doSeckill")
@@ -70,7 +74,8 @@ public class SecKillController implements InitializingBean {
         }
 
         //预减库存
-        Long stock = valueOperations.decrement("seckillGoods:" + goodsId);
+//        Long stock = valueOperations.decrement("seckillGoods:" + goodsId);
+        Long stock = (Long) redisTemplate.execute(redisScript,Collections.singletonList("seckillGoods:" + goodsId),Collections.EMPTY_LIST);
         if(stock < 0){
             EmptyStockMap.put(goodsId,true);
             return ResponseResult.errorResult(AppHttpCodeEnum.EMPTY_STOCK);

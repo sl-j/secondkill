@@ -8,6 +8,7 @@ import com.lei.secondkill.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -20,8 +21,10 @@ import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Controller
@@ -36,6 +39,8 @@ public class GoodsController {
     private RedisTemplate redisTemplate;
     @Autowired
     private ThymeleafViewResolver thymeleafViewResolver;
+    @Autowired
+    private DefaultRedisScript redisScript;
 
     @RequestMapping(value = "/toList",produces = "text/html;charset=utf-8")
     @ResponseBody
@@ -99,5 +104,22 @@ public class GoodsController {
         model.addAttribute("goods",goodsVo);
         model.addAttribute("secKillStatus",secKillStatus);
         return "goodsDetail";
+    }
+
+    public void main(String[] args) {
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+        String value = UUID.randomUUID().toString();
+        Boolean islock = valueOperations.setIfAbsent("k1", value, 5, TimeUnit.SECONDS);
+        if(islock){
+            valueOperations.set("name","xxxx");
+            String name = (String)valueOperations.get("name");
+            System.out.println("name = " + name);
+            System.out.println(valueOperations.get("k1"));
+            Boolean result = (Boolean) redisTemplate.execute(redisScript, Collections.singletonList("k1"), value);
+        }else{
+            System.out.println("有线程在使用");
+        }
+
+
     }
 }
