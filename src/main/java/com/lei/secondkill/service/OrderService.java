@@ -17,4 +17,8 @@ import org.springframework.stereotype.Service;
 public interface OrderService extends IService<Order> {
 
     Order seckill(TUser user, GoodsVo goodsVo);
+
+    String createPath(TUser user, Long goodsId);
+
+    boolean checkCaptcha(TUser user, Long goodsId, String captcha);
 }

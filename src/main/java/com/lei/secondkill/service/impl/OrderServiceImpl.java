@@ -12,6 +12,8 @@ import com.lei.secondkill.mapper.SeckillOrderMapper;
 import com.lei.secondkill.service.OrderService;
 import com.lei.secondkill.service.SeckillGoodsService;
 import com.lei.secondkill.service.SeckillOrderService;
+import com.lei.secondkill.utils.MD5Utils;
+import com.lei.secondkill.utils.UUIDUtil;
 import com.lei.secondkill.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * (Order)表服务实现类
@@ -83,5 +86,33 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
 
         return order;
+    }
+
+    /**
+     * 获取秒杀地址
+     * @param user
+     * @param goodsId
+     * @return
+     */
+    @Override
+    public String createPath(TUser user, Long goodsId) {
+        String str = MD5Utils.md5(UUIDUtil.uuid() + "123456");
+        redisTemplate.opsForValue().set("seckillPath:" + user.getId() + ":"+goodsId,str,60, TimeUnit.SECONDS);
+        return str;
+    }
+
+    /**
+     * 校验验证码
+     * @param user
+     * @param goodsId
+     * @param captcha
+     * @return
+     */
+    @Override
+    public boolean checkCaptcha(TUser user, Long goodsId, String captcha) {
+        if(user == null || goodsId < 0 || captcha == null) return false;
+
+        String str = (String) redisTemplate.opsForValue().get("captcha:" + user.getId() + ":" + goodsId);
+        return captcha.equals(str);
     }
 }
